@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IELTS Vocab Master Pro</title>
+<style>
+:root{
+  --bg:#050505;--panel:rgba(255,255,255,.07);--card:#111;--text:#fff;--muted:#cbd5e1;
+  --red:#ffffff;--darkred:#111111;--line:rgba(255,255,255,.14);
+}
+*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
+body{
+  margin:0;min-height:100vh;color:var(--text);padding:24px;
+  background:radial-gradient(circle at top left,rgba(255,255,255,.16),transparent 30%),
+  radial-gradient(circle at top right,rgba(255,255,255,.12),transparent 25%),
+  linear-gradient(135deg,#000,#09090b 45%,#000000);
+}
+body.light{--bg:#fff;--panel:rgba(255,255,255,.85);--card:#fff;--text:#09090b;--muted:#334155;--line:rgba(0,0,0,.12);background:linear-gradient(135deg,#fff,#f4f4f5,#f8fafc)}
+.container{max-width:1400px;margin:auto}
+.hero,.panel,.section{
+  background:var(--panel);border:1px solid var(--line);border-radius:30px;padding:26px;margin-bottom:22px;
+  backdrop-filter:blur(18px);box-shadow:0 24px 70px rgba(0,0,0,.35)
+}
+h1{font-size:clamp(38px,6vw,74px);margin:0;background:linear-gradient(90deg,#fff,#d4d4d8,#111);-webkit-background-clip:text;color:transparent}
+p{line-height:1.55;color:var(--muted)}
+.badge{display:inline-block;background:rgba(255,255,255,.12);color:#ffffff;border:1px solid rgba(255,255,255,.25);padding:8px 14px;border-radius:999px;font-weight:900;margin-bottom:12px}
+.btns,.toolbar{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+button,select,input{border:none;border-radius:15px;padding:12px 16px;font-weight:800;outline:none}
+button{color:white;background:linear-gradient(90deg,#111,#333);cursor:pointer;border:1px solid rgba(255,255,255,.13)}
+button:hover{transform:translateY(-1px)}
+button.white{background:#fff;color:#111}
+button.secondary{background:#111;color:white}
+button:disabled{opacity:.65;cursor:not-allowed;transform:none}
+input,select{background:rgba(0,0,0,.65);color:white;border:1px solid var(--line)}
+body.light input,body.light select{background:white;color:#111}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px}
+.stat h3{margin:0;color:#ffffff;font-size:30px}
+.progress-wrap{height:14px;background:rgba(255,255,255,.14);border-radius:99px;overflow:hidden}
+.progress{height:100%;width:0;background:linear-gradient(90deg,#ffffff,#fff)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(285px,1fr));gap:18px}
+.card{min-height:335px;perspective:1000px;cursor:pointer}
+.inner{position:relative;min-height:335px;transition:.6s;transform-style:preserve-3d}
+.card.flip .inner{transform:rotateY(180deg)}
+.front,.back{position:absolute;width:100%;min-height:335px;border-radius:25px;padding:22px;background:var(--card);border:1px solid var(--line);backface-visibility:hidden;overflow:auto}
+.back{transform:rotateY(180deg)}
+.word{font-size:28px;font-weight:950;color:#ffffff}
+.label{font-weight:950;color:#fff}
+body.light .label{color:#111111}
+.small{font-size:13px;color:var(--muted)}
+.option{width:100%;display:block;text-align:left;margin:9px 0;background:#111;color:white}
+.correct{background:#16a34a!important}.wrong{background:#dc2626!important}
+.sentence-card,.dict-card,.history-item{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin:12px 0}
+.hidden{display:none!important}
+.reader-now{font-size:34px;font-weight:950;color:#ffffff;margin:15px 0}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}
+.modal-box{max-width:720px;width:100%;max-height:85vh;overflow:auto;background:#111;color:white;border:1px solid rgba(255,255,255,.18);border-radius:28px;padding:24px}
+.kbd{padding:4px 8px;border-radius:8px;background:#111;color:white;border:1px solid var(--line)}
+@media print{button,.toolbar,.btns,.quiz-only{display:none}body{background:white;color:black}.section,.panel,.hero{box-shadow:none;border:1px solid #ddd}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<section class="hero">
+  <span class="badge">IELTS Vocabulary Trainer Pro</span>
+  <h1>Vocab Master</h1>
+  <p>Flashcards, quiz, timer, result page, review mode, favorites, mistake history, listening, speed review, dictionary, export and auto audio reader.</p>
+  <div class="btns">
+    <button onclick="loadDeck(0)">Deck 1 • Health</button>
+    <button onclick="loadDeck(1)">Deck 2 • IELTS</button>
+    <button onclick="setReviewMode('all')">All</button>
+    <button onclick="setReviewMode('hard')">Only Unknown</button>
+    <button onclick="setReviewMode('today')">Today Learned</button>
+    <button onclick="setReviewMode('favorites')">Favorites</button>
+    <button onclick="startExam()">Exam Mode</button>
+    <button onclick="startDailyTest()">Daily Test</button>
+    <button onclick="startListening()">Listening Mode</button>
+    <button onclick="toggleTheme()">Dark / Light</button>
+  </div>
+</section>
+
+<section class="panel grid">
+  <div class="stat"><h3 id="deckName">Deck</h3><span>Current deck</span></div>
+  <div class="stat"><h3 id="totalWords">0</h3><span>Total words</span></div>
+  <div class="stat"><h3 id="knownCount">0</h3><span>Known</span></div>
+  <div class="stat"><h3 id="hardCount">0</h3><span>Unknown / Hard</span></div>
+  <div class="stat"><h3 id="score">0</h3><span>Score</span></div>
+  <div class="stat"><h3 id="streak">1🔥</h3><span>Streak</span></div>
+  <div class="stat"><h3 id="levelBadge">Starter</h3><span>Level badge</span></div>
+</section>
+
+<section class="panel">
+  <h2>Daily Goal</h2>
+  <p id="goalText">20 words target</p>
+  <div class="progress-wrap"><div class="progress" id="progressBar"></div></div>
+</section>
+
+<section class="panel">
+  <div class="toolbar">
+    <input id="search" placeholder="Search by English, Uzbek, synonym..." oninput="renderAll(false)" />
+    <select id="category" onchange="renderAll(true)">
+      <option value="all">All categories</option><option value="Health">Health</option><option value="Education">Education</option>
+      <option value="Money">Money</option><option value="Politics">Politics</option><option value="Academic verbs">Academic verbs</option><option value="Adjectives">Adjectives</option>
+    </select>
+    <button onclick="exportCSV()">Export CSV</button>
+    <button onclick="exportAnki()">Export Anki</button>
+    <button onclick="window.print()">Export PDF</button>
+    <button onclick="resetProgress()">Reset</button>
+  </div>
+</section>
+
+<section class="section">
+  <h2>All Words Auto Audio Reader</h2>
+  <p>Hamma so‘zlarni ketma-ket ovozda aytadi: English → Uzbek → English → Uzbek. Har bir so‘z 2 martadan takrorlanadi.</p>
+  <div class="toolbar">
+    <select id="uzbekVoiceSelect"></select>
+    <button onclick="loadVoices()">Refresh Voices</button>
+  </div>
+  <p class="small">Uzbek ovozi kompyuteringdagi brauzer voice’lariga bog‘liq. Agar haqiqiy Uzbek voice bo‘lmasa, eng yaqin voice ishlaydi.</p>
+  <div class="btns">
+    <button onclick="startAutoReader('current')">Read Current Deck</button>
+    <button onclick="startAutoReader('all')">Read All 82 Words</button>
+    <button onclick="pauseAutoReader()">Pause</button>
+    <button onclick="resumeAutoReader()">Resume</button>
+    <button onclick="stopAutoReader()">Stop</button>
+  </div>
+  <div class="reader-now" id="readerNow">Not started</div>
+  <p id="readerProgress">Progress: 0/0</p>
+</section>
+
+<section class="section">
+  <h2>Flashcards</h2>
+  <div class="cards" id="cards"></div>
+</section>
+
+<section class="section">
+  <h2>Example Sentences</h2>
+  <p class="small">Each word has 2 IELTS-style sentences with American pronunciation.</p>
+  <div id="sentences"></div>
+</section>
+
+<section class="section quiz-only">
+  <h2>Quiz <span class="kbd" id="timer">15</span></h2>
+  <h3 id="question"></h3>
+  <div id="options"></div>
+  <p id="feedback"></p>
+  <button onclick="nextQuestion()">Next Question</button>
+</section>
+
+<section class="section">
+  <h2>Writing / Listening Practice</h2>
+  <p id="writingQ"></p>
+  <input id="writingInput" placeholder="Type English word..." />
+  <button onclick="checkWriting()">Check</button>
+  <button onclick="speak(currentWritingWord.word,'en-US')">Hear Word</button>
+  <p id="writingResult"></p>
+</section>
+
+<section class="section">
+  <h2>Mini Dictionary</h2>
+  <div id="dictionary"></div>
+</section>
+
+<section class="section">
+  <h2>Mistake History</h2>
+  <div id="history"></div>
+</section>
+
+<section id="resultPage" class="section hidden">
+  <h2>Test Result</h2>
+  <div id="resultContent"></div>
+</section>
+
+</div>
+
+<div id="modal" class="modal hidden" onclick="closeModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div id="modalContent"></div>
+    <button onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+<script>
+const rawDecks=[
+{title:"Health Vocabulary",words:[
+["climbing","increasing very fast","tez ko‘tarilayotgan","rising, growing","surging, escalating","Health"],
+["reshaping","changing the form of something","qayta shakllantirish","changing, transforming","restructuring, redefining","Academic verbs"],
+["remind","to help someone remember","eslatmoq","recall, tell","prompt, reiterate","Academic verbs"],
+["define","to describe clearly","ta’riflamoq","describe, explain","characterize, specify","Academic verbs"],
+["awareness","knowledge about something","xabardorlik","knowledge, understanding","consciousness, mindfulness","Education"],
+["manage","to control something successfully","boshqarmoq","control, handle","regulate, supervise","Academic verbs"],
+["prevent","to stop something from happening","oldini olmoq","stop, avoid","avert, hinder","Health"],
+["reverse","to change to the opposite","teskarisiga o‘zgartirmoq","change, undo","overturn, counteract","Academic verbs"],
+["properly","in the correct way","to‘g‘ri tarzda","correctly, rightly","appropriately, accurately","Adjectives"],
+["regulate","to control by rules","nazorat qilmoq","control, manage","moderate, govern","Academic verbs"],
+["source","the place something comes from","manba","origin, base","foundation, resource","Education"],
+["pancreas","an organ controlling sugar","oshqozon osti bezi","organ, gland","digestive gland, endocrine organ","Health"],
+["resistant","not easily affected","chidamli","strong, immune","impervious, unresponsive","Adjectives"],
+["unchecked","not controlled","nazoratsiz","uncontrolled, free","unrestrained, unregulated","Adjectives"],
+["starches","foods rich in carbohydrates","kraxmalli mahsulotlar","carbs, grains","complex carbohydrates, polysaccharides","Health"],
+["carb","short form of carbohydrate","uglevod","carbohydrate, sugar","nutrient, polysaccharide","Health"],
+["protective fats","healthy fats for the body","foydali yog‘lar","healthy fats, good oils","beneficial lipids, heart-friendly fats","Health"],
+["avoid","to stay away from","chetlab o‘tmoq","escape, prevent","circumvent, evade","Academic verbs"],
+["sweetened","made sweeter with sugar","shakar qo‘shilgan","sweet, sugary","sugar-infused, artificially sweetened","Health"],
+["spike","to rise suddenly","keskin oshmoq","jump, increase","surge, soar","Academic verbs"],
+["beverages","drinks","ichimliklar","drinks, liquids","refreshments, soft drinks","Health"],
+["sensible","reasonable and practical","oqilona","wise, practical","prudent, rational","Adjectives"],
+["intake","the amount eaten or drunk","iste’mol miqdori","consumption, use","ingestion, absorption","Health"],
+["endocrinologist","doctor for hormone diseases","endokrinolog","specialist, doctor","hormone expert, consultant","Health"],
+["chairman","leader of a group","rais","leader, head","chairperson, director","Politics"],
+["excess","more than needed","ortiqcha","extra, surplus","abundance, overabundance","Adjectives"],
+["diabetic","related to diabetes","diabetga oid","diabetes-related, sick","hyperglycemic, glucose-impaired","Health"],
+["prescribed","officially recommended by a doctor","shifokor yozib bergan","recommended, ordered","authorized, designated","Health"],
+["resistance","the ability to oppose","qarshilik","opposition, strength","resilience, defiance","Health"],
+["overlooked","not given enough attention","e’tibordan chetda qolgan","ignored, missed","neglected, disregarded","Academic verbs"],
+["obesity","extreme overweight condition","semizlik","fatness, overweight","corpulence, adiposity","Health"],
+["meanwhile","at the same time","shu paytda","simultaneously, meanwhile","concurrently, in the interim","Academic verbs"],
+["triggers","causes something to happen","qo‘zg‘atadi","causes, starts","initiates, provokes","Academic verbs"],
+["raises","increases","oshiradi","increases, lifts","elevates, boosts","Academic verbs"],
+["cravings","strong desires for food","kuchli ishtaha","desires, urges","yearnings, longings","Health"],
+["unwind","to relax","dam olmoq","relax, rest","decompress, rejuvenate","Health"],
+["dramatically","greatly or suddenly","keskin ravishda","greatly, strongly","substantially, significantly","Adjectives"]
+]},
+{title:"IELTS Vocabulary",words:[
+["no-brainer","something very easy to decide","juda oson qaror","easy choice, obvious","straightforward, self-evident","Adjectives"],
+["flocked","went somewhere in large numbers","to‘planib bormoq","gathered, crowded","congregated, swarmed","Academic verbs"],
+["touted","praised publicly","maqtamoq","promoted, praised","advocated, acclaimed","Academic verbs"],
+["stagnate","stop improving or growing","rivojlanmaslik","stop, slow down","deteriorate, plateau","Academic verbs"],
+["disillusionment","disappointment after losing belief","hafsalasi pir bo‘lish","disappointment, frustration","disenchantment, dissatisfaction","Education"],
+["worsened","became worse","yomonlashmoq","declined, deteriorated","exacerbated, aggravated","Academic verbs"],
+["undertaking","starting or doing something difficult","amalga oshirish","doing, starting","pursuing, embarking","Academic verbs"],
+["troublingly","in a worrying way","xavotirli tarzda","worryingly, badly","alarmingly, disturbingly","Adjectives"],
+["dispersion","spreading over an area","tarqalish","spread, distribution","scattering, dissemination","Education"],
+["hugely","very greatly","juda katta darajada","greatly, extremely","enormously, tremendously","Adjectives"],
+["institution","organization such as university","muassasa","organization, establishment","corporation, entity","Education"],
+["recouping","getting back money or loss","qaytarib olmoq","recover, regain","reimburse, recuperate","Money"],
+["stagnated","stopped developing","to‘xtab qolgan","slowed, halted","plateaued, deteriorated","Academic verbs"],
+["actually","in reality","aslida","really, truly","genuinely, effectively","Academic verbs"],
+["soared","increased quickly","keskin oshmoq","rose, jumped","skyrocketed, surged","Academic verbs"],
+["graduate","person who finished studies","bitiruvchi","alumnus, student","degree-holder, postgraduate","Education"],
+["enrolling","officially joining","ro‘yxatdan o‘tmoq","joining, registering","matriculating, signing up","Education"],
+["benchmark","standard for comparison","mezon","standard, reference","criterion, yardstick","Education"],
+["qualification","official skill or certificate","malaka","certificate, degree","credential, accreditation","Education"],
+["crucial","extremely important","juda muhim","important, key","vital, indispensable","Adjectives"],
+["stretch","difficult situation","qiyin vaziyat","challenge, difficulty","strain, ordeal","Money"],
+["abolish","officially end something","bekor qilmoq","remove, cancel","eradicate, eliminate","Politics"],
+["adapting","changing to fit situation","moslashmoq","adjusting, changing","accommodating, conforming","Academic verbs"],
+["indicator","sign that shows something","ko‘rsatkich","sign, signal","marker, determinant","Education"],
+["amplify","make stronger or louder","kuchaytirmoq","increase, strengthen","intensify, magnify","Academic verbs"],
+["relates","connected with","bog‘liq bo‘lmoq","connects, concerns","correlates, pertains","Academic verbs"],
+["political","related to government","siyosiy","governmental, public","diplomatic, legislative","Politics"],
+["halved","reduced by 50%","yarmiga kamaymoq","reduced, cut","diminished, decreased","Money"],
+["generosity","willingness to give","saxiylik","kindness, giving","benevolence, magnanimity","Money"],
+["repayment","paying money back","qayta to‘lash","payback, return","reimbursement, restitution","Money"],
+["reckons","believes or calculates","hisoblamoq","thinks, believes","estimates, assumes","Academic verbs"],
+["parsimonious","very unwilling to spend money","ziqna","cheap, stingy","frugal, miserly","Money"],
+["splurge","spend too much money","ko‘p pul sarflamoq","waste, overspend","squander, lavish","Money"],
+["lenient","not strict","yumshoq","easy, tolerant","permissive, indulgent","Adjectives"],
+["crude","simple and not developed","qo‘pol","rough, basic","primitive, unsophisticated","Adjectives"],
+["bound","certain to happen","aniq","certain, sure","inevitable, destined","Adjectives"],
+["sake","purpose or benefit","maqsad","benefit, purpose","interest, welfare","Education"],
+["implications","possible effects/results","oqibatlar","effects, results","consequences, ramifications","Education"],
+["evolving","gradually developing","rivojlanayotgan","changing, developing","progressing, transforming","Academic verbs"],
+["stages","steps or periods","bosqichlar","phases, steps","intervals, milestones","Education"],
+["conferred","officially gave","taqdim etdi","gave, awarded","bestowed, granted","Education"],
+["assumption","belief without proof","taxmin","belief, idea","presumption, hypothesis","Education"],
+["fierce","very strong or intense","kuchli","strong, aggressive","ferocious, intense","Adjectives"],
+["fixedated","gave too much attention","qattiq berilib ketmoq","obsessed, focused","preoccupied, engrossed","Adjectives"],
+["tackling","trying to solve","hal qilmoq","handling, solving","addressing, confronting","Academic verbs"]
+]}];
+
+let deckIndex=0,reviewMode="all",currentQuestion=0,quizLocked=false,timerId=null,timeLeft=15,examMode=false,examTotal=20,examAnswered=0,examCorrect=0,currentWritingWord=null;
+let readerRunning=false,readerPaused=false,readerIndex=0,readerList=[];
+const dailyGoal=20,scoreKey="vocabScore";
+let score=Number(localStorage.getItem(scoreKey)||0);
+
+function mapWords(){return rawDecks[deckIndex].words.map(([word,definition,uzbek,basic,c1,category])=>({id:rawDecks[deckIndex].title+"-"+word,word,definition,uzbek,basic,c1,category}))}
+function allWords(){let arr=[];rawDecks.forEach(d=>d.words.forEach(([word,definition,uzbek,basic,c1,category])=>arr.push({id:d.title+"-"+word,word,definition,uzbek,basic,c1,category})));return arr}
+function store(k){return JSON.parse(localStorage.getItem(k)||"[]")}
+function save(k,v){localStorage.setItem(k,JSON.stringify([...new Set(v)]))}
+function today(){return new Date().toISOString().slice(0,10)}
+function initStreak(){let last=localStorage.getItem("lastVisit"),st=Number(localStorage.getItem("streak")||1);if(last!==today()){st++;localStorage.setItem("lastVisit",today());localStorage.setItem("streak",st)}document.getElementById("streak").textContent=st+"🔥"}
+function examples(w){return[
+`Governments should take sensible steps to address ${w.word} because it can influence people's long-term wellbeing.`,
+`In many IELTS essays, the idea of ${w.word} can be used to explain a wider social or economic trend.`
+]}
+function family(w){return w.word.includes("ing")?w.word.replace("ing","")+" / "+w.word:w.word+" / related form"}
+function collocation(w){return w.category==="Money"?`financial ${w.word}`:w.category==="Health"?`public health ${w.word}`:w.category==="Education"?`academic ${w.word}`:`serious ${w.word}`}
+function usage(w){return `Useful for IELTS ${w.category} topics when explaining causes, effects, trends or opinions.`}
+function visible(){let list=mapWords(),q=document.getElementById("search").value.toLowerCase(),cat=document.getElementById("category").value;
+if(reviewMode==="hard")list=list.filter(w=>store("hard").includes(w.id));
+if(reviewMode==="today")list=list.filter(w=>store("todayKnown").includes(w.id));
+if(reviewMode==="favorites")list=list.filter(w=>store("favorites").includes(w.id));
+if(cat!=="all")list=list.filter(w=>w.category===cat);
+return list.filter(w=>`${w.word} ${w.uzbek} ${w.definition} ${w.basic} ${w.c1}`.toLowerCase().includes(q))}
+function renderAll(loadNewQuiz=true){document.getElementById("deckName").textContent=reviewMode==="all"?rawDecks[deckIndex].title:reviewMode;document.getElementById("score").textContent=score;renderStats();renderCards();renderSentences();renderDict();renderHistory();if(loadNewQuiz){loadQuiz();loadWriting()}}
+function renderStats(){let all=mapWords(),known=store("known"),hard=store("hard");let kc=all.filter(w=>known.includes(w.id)).length,hc=all.filter(w=>hard.includes(w.id)).length;document.getElementById("totalWords").textContent=all.length;document.getElementById("knownCount").textContent=kc;document.getElementById("hardCount").textContent=hc;document.getElementById("progressBar").style.width=Math.min(kc/dailyGoal*100,100)+"%";document.getElementById("goalText").textContent=`Goal: ${dailyGoal} words today | Done: ${kc}`;document.getElementById("levelBadge").textContent=kc<10?"Beginner":kc<25?"IELTS Builder":kc<45?"C1 Hunter":"Band 7"}
+function renderCards(){let known=store("known"),hard=store("hard"),fav=store("favorites");document.getElementById("cards").innerHTML=visible().map(w=>`<div class="card" onclick="this.classList.toggle('flip')"><div class="inner"><div class="front"><div class="word">${w.word}</div><p><span class="label">Category:</span> ${w.category}</p><p><span class="label">Definition:</span> ${w.definition}</p><p><span class="label">Basic:</span> ${w.basic}</p><p class="small">Click to flip</p></div><div class="back"><p><span class="label">Uzbek:</span> ${w.uzbek}</p><p><span class="label">C1:</span> ${w.c1}</p><p><span class="label">Collocation:</span> ${collocation(w)}</p><div class="btns"><button onclick="event.stopPropagation();speak('${esc(w.word)}','en-US')">Speak</button><button onclick="event.stopPropagation();markKnown('${esc(w.id)}')">${known.includes(w.id)?"Known ✅":"Known"}</button><button onclick="event.stopPropagation();markHard('${esc(w.id)}')">${hard.includes(w.id)?"Hard ✅":"Hard"}</button><button onclick="event.stopPropagation();toggleFav('${esc(w.id)}')">${fav.includes(w.id)?"★":"☆"}</button><button onclick="event.stopPropagation();detail('${esc(w.id)}')">Details</button></div></div></div></div>`).join("")}
+function renderSentences(){document.getElementById("sentences").innerHTML=visible().map(w=>{let e=examples(w);return `<div class="sentence-card"><h3>${w.word}</h3><p>${e[0]}</p><button onclick="speak('${esc(e[0])}','en-US')">Speak 1</button><p>${e[1]}</p><button onclick="speak('${esc(e[1])}','en-US')">Speak 2</button></div>`}).join("")}
+function renderDict(){document.getElementById("dictionary").innerHTML=visible().map(w=>`<div class="dict-card"><h3>${w.word}</h3><p><b>Word family:</b> ${family(w)}</p><p><b>Collocation:</b> ${collocation(w)}</p><p><b>IELTS usage:</b> ${usage(w)}</p></div>`).join("")}
+function renderHistory(){let mh=store("mistakes");document.getElementById("history").innerHTML=mh.slice(-20).reverse().map(id=>{let w=allWords().find(x=>x.id===id);return `<div class="history-item">${w?w.word:id}</div>`}).join("")||"<p>No mistakes yet.</p>"}
+function loadDeck(i){deckIndex=i;reviewMode="all";currentQuestion=0;examMode=false;renderAll(true)}
+function setReviewMode(m){reviewMode=m;currentQuestion=0;renderAll(true)}
+function markKnown(id){let k=store("known");if(!k.includes(id))k.push(id);save("known",k);let t=store("todayKnown");if(!t.includes(id))t.push(id);save("todayKnown",t);save("hard",store("hard").filter(x=>x!==id));renderAll(false)}
+function markHard(id){let h=store("hard");if(!h.includes(id))h.push(id);save("hard",h);let m=store("mistakes");m.push(id);localStorage.setItem("mistakes",JSON.stringify(m));renderAll(false)}
+function toggleFav(id){let f=store("favorites");f=f.includes(id)?f.filter(x=>x!==id):[...f,id];save("favorites",f);renderAll(false)}
+function startTimer(correctId){clearInterval(timerId);timeLeft=15;document.getElementById("timer").textContent=timeLeft;timerId=setInterval(()=>{timeLeft--;document.getElementById("timer").textContent=timeLeft;if(timeLeft<=0){clearInterval(timerId);if(!quizLocked){markHard(correctId);document.getElementById("feedback").textContent="Time is over.";quizLocked=true;document.querySelectorAll(".option").forEach(b=>b.disabled=true)}}},1000)}
+function loadQuiz(){quizLocked=false;document.getElementById("feedback").textContent="";let list=examMode?shuffle(mapWords()).slice(0,examTotal):visible();if(!list.length){document.getElementById("question").textContent="No words available.";document.getElementById("options").innerHTML="";return}let c=list[currentQuestion%list.length];let opts=shuffle(mapWords().filter(w=>w.word!==c.word)).slice(0,3);opts.push(c);opts=shuffle(opts);document.getElementById("question").textContent=`"${c.uzbek}" inglizchasi qaysi?`;document.getElementById("options").innerHTML=opts.map(o=>`<button class="option" onclick="answer(this,'${esc(o.id)}','${esc(c.id)}')">${o.word}</button>`).join("");startTimer(c.id)}
+function answer(btn,selected,correct){if(quizLocked)return;quizLocked=true;clearInterval(timerId);let cw=allWords().find(w=>w.id===correct);document.querySelectorAll(".option").forEach(b=>{b.disabled=true;if(b.textContent.trim()===cw.word)b.classList.add("correct")});if(selected===correct){btn.classList.add("correct");score++;examCorrect++;localStorage.setItem(scoreKey,score);markKnown(correct);document.getElementById("feedback").textContent="Correct ✅"}else{btn.classList.add("wrong");markHard(correct);document.getElementById("feedback").textContent=`Wrong ❌ Correct: ${cw.word}`}if(examMode){examAnswered++;if(examAnswered>=examTotal)showResult()}}
+function nextQuestion(){currentQuestion++;loadQuiz();loadWriting()}
+function loadWriting(){let list=visible().length?visible():mapWords();currentWritingWord=list[currentQuestion%list.length];document.getElementById("writingQ").textContent=`Write the English word: ${currentWritingWord.uzbek}`;document.getElementById("writingInput").value="";document.getElementById("writingResult").textContent=""}
+function checkWriting(){let ans=document.getElementById("writingInput").value.trim().toLowerCase();if(ans===currentWritingWord.word.toLowerCase()){document.getElementById("writingResult").textContent="Correct ✅";markKnown(currentWritingWord.id)}else{document.getElementById("writingResult").textContent=`Wrong ❌ Correct: ${currentWritingWord.word}`;markHard(currentWritingWord.id)}}
+function startExam(){examMode=true;examTotal=20;examAnswered=0;examCorrect=0;currentQuestion=0;document.getElementById("resultPage").classList.add("hidden");loadQuiz()}
+function showResult(){clearInterval(timerId);let hard=store("hard").length,acc=Math.round(examCorrect/examTotal*100);document.getElementById("resultPage").classList.remove("hidden");document.getElementById("resultContent").innerHTML=`<h3>Score: ${examCorrect}/${examTotal}</h3><p>Accuracy: ${acc}%</p><p>Hard words: ${hard}</p><p>Advice: ${acc<70?"Review hard words again. Vocabulary empire not built in one evening.":"Good. Repeat tomorrow."}</p>`}
+function startDailyTest(){examMode=true;examTotal=10;examAnswered=0;examCorrect=0;currentQuestion=0;loadQuiz()}
+function startListening(){let w=shuffle(visible().length?visible():mapWords())[0];currentWritingWord=w;speak(w.word,"en-US");document.getElementById("writingQ").textContent="Listen and type the word you hear."}
+function detail(id){let w=allWords().find(x=>x.id===id);let e=examples(w);document.getElementById("modalContent").innerHTML=`<h2>${w.word}</h2><p><b>Definition:</b> ${w.definition}</p><p><b>Uzbek:</b> ${w.uzbek}</p><p><b>Synonyms:</b> ${w.basic}</p><p><b>C1:</b> ${w.c1}</p><p><b>Family:</b> ${family(w)}</p><p><b>Collocation:</b> ${collocation(w)}</p><p><b>Usage:</b> ${usage(w)}</p><p>${e[0]}</p><p>${e[1]}</p><button onclick="speak('${esc(w.word)}','en-US')">Pronounce</button>`;document.getElementById("modal").classList.remove("hidden")}
+function closeModal(){document.getElementById("modal").classList.add("hidden")}
+
+let availableVoices = [];
+
+function loadVoices() {
+  availableVoices = speechSynthesis.getVoices();
+  const select = document.getElementById("uzbekVoiceSelect");
+  if (!select) return;
+
+  const preferred = availableVoices.filter(v =>
+    v.lang.toLowerCase().includes("uz") ||
+    v.name.toLowerCase().includes("uzbek") ||
+    v.lang.toLowerCase().includes("tr") ||
+    v.lang.toLowerCase().includes("ru")
+  );
+
+  const list = preferred.length ? preferred : availableVoices;
+
+  select.innerHTML = list.map((v, i) =>
+    `<option value="${availableVoices.indexOf(v)}">${v.name} — ${v.lang}</option>`
+  ).join("");
+
+  if (!list.length) {
+    select.innerHTML = `<option>No voices found</option>`;
+  }
+}
+
+speechSynthesis.onvoiceschanged = loadVoices;
+setTimeout(loadVoices, 500);
+
+function getUzbekVoice() {
+  const select = document.getElementById("uzbekVoiceSelect");
+  if (!availableVoices.length) availableVoices = speechSynthesis.getVoices();
+
+  if (select && select.value !== "" && availableVoices[Number(select.value)]) {
+    return availableVoices[Number(select.value)];
+  }
+
+  return availableVoices.find(v => v.lang.toLowerCase().startsWith("uz")) ||
+         availableVoices.find(v => v.name.toLowerCase().includes("uzbek")) ||
+         availableVoices.find(v => v.lang.toLowerCase().startsWith("tr")) ||
+         availableVoices.find(v => v.lang.toLowerCase().startsWith("ru")) ||
+         null;
+}
+
+function getEnglishVoice() {
+  if (!availableVoices.length) availableVoices = speechSynthesis.getVoices();
+
+  return availableVoices.find(v => v.lang === "en-US") ||
+         availableVoices.find(v => v.lang.toLowerCase().startsWith("en")) ||
+         null;
+}
+
+function speak(text, lang = "en-US") {
+  return new Promise(resolve => {
+    speechSynthesis.cancel();
+
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang;
+    u.rate = lang === "uz-UZ" ? 0.72 : 0.85;
+    u.pitch = 1;
+
+    if (lang === "uz-UZ") {
+      const voice = getUzbekVoice();
+      if (voice) u.voice = voice;
+    } else {
+      const voice = getEnglishVoice();
+      if (voice) u.voice = voice;
+    }
+
+    u.onend = resolve;
+    u.onerror = resolve;
+    speechSynthesis.speak(u);
+  });
+}
+
+function speakNoCancel(text, lang = "en-US") {
+  return new Promise(resolve => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang;
+    u.rate = lang === "uz-UZ" ? 0.72 : 0.85;
+    u.pitch = 1;
+
+    if (lang === "uz-UZ") {
+      const voice = getUzbekVoice();
+      if (voice) u.voice = voice;
+    } else {
+      const voice = getEnglishVoice();
+      if (voice) u.voice = voice;
+    }
+
+    u.onend = resolve;
+    u.onerror = resolve;
+    speechSynthesis.speak(u);
+  });
+}
+async function startAutoReader(mode){
+  stopAutoReader();
+  await new Promise(r=>setTimeout(r,150));
+  readerRunning=true;readerPaused=false;readerIndex=0;
+  readerList=mode==="all"?allWords():mapWords();
+  document.getElementById("readerProgress").textContent=`Progress: 0/${readerList.length}`;
+  for(readerIndex=0;readerIndex<readerList.length;readerIndex++){
+    if(!readerRunning)break;
+    while(readerPaused&&readerRunning){await new Promise(r=>setTimeout(r,300))}
+    let w=readerList[readerIndex];
+    document.getElementById("readerNow").textContent=`${readerIndex+1}. ${w.word} — ${w.uzbek}`;
+    document.getElementById("readerProgress").textContent=`Progress: ${readerIndex+1}/${readerList.length}`;
+    await speakNoCancel(w.word,"en-US");
+    await speakNoCancel(w.uzbek,"uz-UZ");
+    await speakNoCancel(w.word,"en-US");
+    await speakNoCancel(w.uzbek,"uz-UZ");
+    await new Promise(r=>setTimeout(r,300));
+  }
+  if(readerRunning){document.getElementById("readerNow").textContent="Finished ✅"}
+  readerRunning=false;
+}
+function stopAutoReader(){readerRunning=false;readerPaused=false;speechSynthesis.cancel();document.getElementById("readerNow").textContent="Stopped"}
+function pauseAutoReader(){readerPaused=true;speechSynthesis.pause();document.getElementById("readerNow").textContent="Paused"}
+function resumeAutoReader(){readerPaused=false;speechSynthesis.resume()}
+
+function shuffle(a){return[...a].sort(()=>Math.random()-.5)}
+function esc(s){return String(s).replaceAll("&","&amp;").replaceAll("'","&#39;").replaceAll('"',"&quot;").replaceAll("<","&lt;").replaceAll(">","&gt;")}
+function exportCSV(){let csv="word,definition,uzbek,basic,c1,category\n"+mapWords().map(w=>`"${w.word}","${w.definition}","${w.uzbek}","${w.basic}","${w.c1}","${w.category}"`).join("\n");download("vocab.csv",csv)}
+function exportAnki(){let txt=mapWords().map(w=>`${w.word}\t${w.uzbek} - ${w.definition}`).join("\n");download("anki-vocab.txt",txt)}
+function download(name,text){let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/plain"}));a.download=name;a.click()}
+function toggleTheme(){document.body.classList.toggle("light")}
+function resetProgress(){["known","hard","mistakes","favorites","todayKnown",scoreKey].forEach(k=>localStorage.removeItem(k));score=0;renderAll(true)}
+initStreak();renderAll(true);
+</script>
+</body>
+</html>
